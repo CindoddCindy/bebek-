@@ -1,6 +1,8 @@
 package com.ingenicomovement.rvexpand;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -8,11 +10,11 @@ import android.os.Bundle;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ListItemListener {
 
-    private RecyclerView recyclerView;
-    private ArrayList<MobileOs> mobileOSes;
-    private RecyclerAdapter adapter;
+    ArrayList<Place> places;
+    CardView cvContainer;
+
 
 
     @Override
@@ -20,61 +22,51 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mobileOSes = new ArrayList<>();
+        places = new ArrayList<>();
+        for (int i=0; i<6; i++) {
+            places.add(new Place("place " + i));
+        }
 
-        setData();
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+        cvContainer = (CardView) findViewById(R.id.card_background);
+        RecyclerView rvList = (RecyclerView) findViewById(R.id.rv_list);
+        PlaceArrayAdapter placeArrayAdapter = new PlaceArrayAdapter(places);
+        rvList.setLayoutManager(new LinearLayoutManager(this));
+        rvList.setItemAnimator(new DefaultItemAnimator());
+        rvList.setAdapter(placeArrayAdapter);
 
-        adapter = new RecyclerAdapter(this, mobileOSes);
-        recyclerView.setAdapter(adapter);
+        placeArrayAdapter.setListItemListener(this);
+
+
+        rvList.post(new Runnable() {
+            @Override
+            public void run() {
+                int baseHeight =  Math.round(getResources().getDimension(R.dimen.place_item_height));
+                int collapseAmount = baseHeight * (places.size() - 1);
+                ExpandableUtil.collapseWithNoAnimation(cvContainer, collapseAmount);
+            }
+        });
+
+
+
+
+
+
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        adapter.onSaveInstanceState(outState);
+    public void onExpand() {
+        int from =  Math.round(getResources().getDimension(R.dimen.place_item_height));
+        int to = from * places.size();
+        ExpandableUtil.expand(cvContainer, from, to);
+
+
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        adapter.onRestoreInstanceState(savedInstanceState);
-    }
+    public void onCollapse() {
+        int baseHeight =  Math.round(getResources().getDimension(R.dimen.place_item_height));
+        int collapseAmount = baseHeight * (places.size() - 1);
+        ExpandableUtil.collapse(cvContainer, collapseAmount);
 
-    private void setData() {
-        ArrayList<Phone> iphones = new ArrayList<>();
-        iphones.add(new Phone("iPhone 4"));
-        iphones.add(new Phone("iPhone 4S"));
-        iphones.add(new Phone("iPhone 5"));
-        iphones.add(new Phone("iPhone 5S"));
-        iphones.add(new Phone("iPhone 6"));
-        iphones.add(new Phone("iPhone 6Plus"));
-        iphones.add(new Phone("iPhone 6S"));
-        iphones.add(new Phone("iPhone 6S Plus"));
-
-        ArrayList<Phone> nexus = new ArrayList<>();
-        nexus.add(new Phone("Nexus One"));
-        nexus.add(new Phone("Nexus S"));
-        nexus.add(new Phone("Nexus 4"));
-        nexus.add(new Phone("Nexus 5"));
-        nexus.add(new Phone("Nexus 6"));
-        nexus.add(new Phone("Nexus 5X"));
-        nexus.add(new Phone("Nexus 6P"));
-        nexus.add(new Phone("Nexus 7"));
-
-        ArrayList<Phone> windowPhones = new ArrayList<>();
-        windowPhones.add(new Phone("Nokia Lumia 800"));
-        windowPhones.add(new Phone("Nokia Lumia 710"));
-        windowPhones.add(new Phone("Nokia Lumia 900"));
-        windowPhones.add(new Phone("Nokia Lumia 610"));
-        windowPhones.add(new Phone("Nokia Lumia 510"));
-        windowPhones.add(new Phone("Nokia Lumia 820"));
-        windowPhones.add(new Phone("Nokia Lumia 920"));
-
-        mobileOSes.add(new MobileOs("iOS", iphones));
-        mobileOSes.add(new MobileOs("Android", nexus));
-        mobileOSes.add(new MobileOs("Window Phone", windowPhones));
     }
 }
